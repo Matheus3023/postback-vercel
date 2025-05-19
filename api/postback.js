@@ -1,8 +1,9 @@
 import crypto from 'crypto';
-import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).send('Método não permitido');
+  if (req.method !== 'POST') {
+    return res.status(405).send('Método não permitido');
+  }
 
   const SECRET = 'trafegointerno123';
   const PIXEL_ID = '621141394292098';
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
         event_time: Math.floor(Date.now() / 1000),
         action_source: 'website',
         user_data: {
-          // Ideal: você passar email, phone, ip, user_agent etc se tiver
+          // Se tiver dados como email, phone, ip, user_agent, adicione aqui para melhor match
         },
         custom_data: {
           user_id: query.user_id
@@ -45,14 +46,14 @@ export default async function handler(req, res) {
   try {
     const response = await fetch(fbUrl, {
       method: 'POST',
-      body: JSON.stringify(eventData),
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(eventData)
     });
 
     const result = await response.json();
     console.log('📤 Facebook response:', result);
   } catch (e) {
-    console.error('Erro ao enviar pro Facebook:', e);
+    console.error('❌ Erro ao enviar pro Facebook:', e);
   }
 
   return res.status(200).json({ sucesso: true });
