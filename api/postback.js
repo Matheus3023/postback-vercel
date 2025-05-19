@@ -4,7 +4,7 @@ import crypto from 'crypto';
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Método não permitido');
 
-  const SECRET = 'SUA_CHAVE_SECRETA_AQUI'; // Substitua pela chave que copiar no painel
+  const SECRET = 'trafegointerno123'; // Substitua pela chave que copiar no painel
   const query = req.query;
   const rawUrl = req.url.split('?')[1]; // pega a parte depois do ?
 
