@@ -22,19 +22,39 @@ export default async function handler(req, res) {
     return res.status(401).json({ sucesso: false, erro: 'Assinatura inválida' });
   }
 
-  console.log('✅ Postback recebido:', query);
+  const eventType = query.type;
+  let eventName = '';
+
+  switch (eventType) {
+    case 'REGISTRATION':
+      eventName = 'CompleteRegistration';
+      break;
+    case 'FTD':
+      eventName = 'Purchase';
+      break;
+    case 'DEPOSIT_CONFIRMATION':
+      eventName = 'Lead';
+      break;
+    default:
+      eventName = 'CustomEvent';
+  }
 
   const eventData = {
     data: [
       {
-        event_name: 'CompleteRegistration',
+        event_name: eventName,
         event_time: Math.floor(Date.now() / 1000),
         action_source: 'website',
         user_data: {
-          // Se tiver dados como email, phone, ip, user_agent, adicione aqui para melhor match
+          // Campos como email, phone, ip etc. podem ser adicionados aqui futuramente
         },
         custom_data: {
-          user_id: query.user_id
+          user_id: query.user_id || '',
+          deposit_id: query.deposit_id || '',
+          deposit_value: query.deposit_value || '',
+          amount: query.amount || '',
+          registration_date: query.registration_date || '',
+          deposit_date: query.deposit_date || ''
         }
       }
     ],
@@ -43,17 +63,24 @@ export default async function handler(req, res) {
 
   const fbUrl = `https://graph.facebook.com/v18.0/${PIXEL_ID}/events`;
 
+  // Tenta enviar pro Facebook com timeout de segurança
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000); // 4 segundos
+
     const response = await fetch(fbUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(eventData)
+      body: JSON.stringify(eventData),
+      signal: controller.signal
     });
+
+    clearTimeout(timeout);
 
     const result = await response.json();
     console.log('📤 Facebook response:', result);
   } catch (e) {
-    console.error('❌ Erro ao enviar pro Facebook:', e);
+    console.error('❌ Erro ao enviar para o Facebook:', e.message || e);
   }
 
   return res.status(200).json({ sucesso: true });
