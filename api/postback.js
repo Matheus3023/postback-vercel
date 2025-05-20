@@ -46,7 +46,8 @@ export default async function handler(req, res) {
         event_time: Math.floor(Date.now() / 1000),
         action_source: 'website',
         user_data: {
-          // Campos como email, phone, ip etc. podem ser adicionados aqui futuramente
+          client_ip_address: req.headers['x-forwarded-for'] || '127.0.0.1',
+          client_user_agent: req.headers['user-agent'] || 'test-agent'
         },
         custom_data: {
           user_id: query.user_id || '',
@@ -63,10 +64,9 @@ export default async function handler(req, res) {
 
   const fbUrl = `https://graph.facebook.com/v18.0/${PIXEL_ID}/events`;
 
-  // Tenta enviar pro Facebook com timeout de segurança
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000); // 4 segundos
+    const timeout = setTimeout(() => controller.abort(), 4000);
 
     const response = await fetch(fbUrl, {
       method: 'POST',
