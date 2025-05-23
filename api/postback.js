@@ -8,10 +8,9 @@ export default async function handler(req, res) {
 
   const query = req.query;
 
-  // tipo de evento vindo da URL
+  // Define tipo de evento
   const eventType = query.type;
   let eventName = '';
-
   switch (eventType) {
     case 'REGISTRATION':
       eventName = 'CompleteRegistration';
@@ -26,6 +25,11 @@ export default async function handler(req, res) {
       eventName = 'CustomEvent';
   }
 
+  // Extrai headers
+  const client_ip_address = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1';
+  const client_user_agent = req.headers['user-agent'] || 'Mozilla/5.0';
+
+  // Monta dados do evento
   const eventData = {
     data: [
       {
@@ -33,8 +37,10 @@ export default async function handler(req, res) {
         event_time: Math.floor(Date.now() / 1000),
         action_source: 'website',
         user_data: {
-          client_ip_address: req.headers['x-forwarded-for'] || '127.0.0.1',
-          client_user_agent: req.headers['user-agent'] || 'Mozilla/5.0'
+          client_ip_address,
+          client_user_agent,
+          fbc: query.fbc || '',
+          fbp: query.fbp || ''
         },
         custom_data: {
           user_id: query.user_id || '',
